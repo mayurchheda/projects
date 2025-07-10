@@ -26,8 +26,7 @@ while n>0:
         print("You made it to the end!")
     n -= 1
 print("Your friends are:")
-for friend in friends:
-    print(friend)
+print(", ".join(friends))
 best_friend_name = input("Who is your best friend? Type Name and press Enter to continue:")
 print(f"Your best friend is {best_friend_name}!")
 print("Your remaining friends are:")

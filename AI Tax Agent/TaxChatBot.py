@@ -7,13 +7,17 @@ load_dotenv()
 client = OpenAI(
   api_key= os.getenv("OPENAI_API_KEY")
 )
+query = input("Enter your tax query: ")
 completion = client.chat.completions.create(
   model="gpt-4o-mini",
   store=True,
   messages=[
-    {"role": "user", "content": "write a 10 line poem about dev chheda"}
+    {"role": "user", "content": "You are a tax agent working at KMTaxService.com. Answer the following query: " + query},
   ]
 )
-
-print(completion.choices[0].message);
+response = completion.choices[0].message.content
+print("Response from the AI Tax Agent:")
+print(response)
+#print("Full response object:")
+#print(completion.choices[0].message); 
 
