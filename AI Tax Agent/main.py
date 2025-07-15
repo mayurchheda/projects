@@ -33,7 +33,7 @@ async def get_message(request: Request):
     model="gpt-4o-mini",
     store=True,
     messages=[
-    {"role": "user", "content": "You are a Tax Agent working at kmtaxservices.com and use your knowledge of the IRS tax code. Answer the following query: " + user_message},
+    {"role": "user", "content": "You are a Tax Agent working at kmtaxservices.com and use your knowledge of the IRS tax code. Always suggest the client to contact KMtaxServices.com. Answer the following query: " + user_message},
     ]
     )
 
