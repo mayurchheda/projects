@@ -130,6 +130,7 @@
  <!-- Losing sound -->
   <audio id="loseSound" src="Images/boo-6377.mp3"></audio>
     <audio id="winSound" src="Images/crowd-cheers-310543.mp3"></audio>
+    <audio id="drawSound" src="Images/draw.mp3"></audio>
 
 
 </body>
@@ -177,12 +178,13 @@ if((playerChoice=='rock' && computerChoice=='rock')||(playerChoice=='paper' && c
         console.log('It is a draw')
         document.getElementById("output").innerHTML = "It's a draw. Try again"
         score.Ties=score.Ties+1;
+        document.getElementById("drawSound").play();
 
     } else {if 
         ((playerChoice=='rock'&&computerChoice=='scissors')||(playerChoice=='scissors'&&computerChoice=='paper')||(playerChoice=='paper'&&computerChoice=='rock')) 
         {
         console.log('You Win')
-        document.getElementById("output").innerHTML = "Congratulations! You Win!!!" 
+        document.getElementById("output").innerHTML = "😄🎉Congratulations! You Win!!!" 
         score.Wins=score.Wins+1;
         triggerConfetti();
 
