@@ -84,7 +84,7 @@
 
         </style>
     </head>
-    
+
 <body>
 <div class="container">
 
@@ -127,6 +127,11 @@
     <h3>© 2025 Mayur Chheda | Built with ❤️ | <a href="mailto:profchheda@gmail.com">Contact</a></h3>
   </div>
 
+ <!-- Losing sound -->
+  <audio id="loseSound" src="Images/boo-6377.mp3"></audio>
+    <audio id="winSound" src="Images/crowd-cheers-310543.mp3"></audio>
+
+
 </body>
 
 <script>
@@ -163,7 +168,7 @@ function winner(playerChoice)
     console.log('Your Choice:'+ playerChoice);
     console.log(randomNumber);
     console.log('Computer Choice:'+ computerChoice);
-    document.querySelector('.js-moves').innerHTML = `You: ${playerChoice} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Computer: ${computerChoice}`;
+    document.querySelector('.js-moves').innerHTML = `<b>You</b>: ${playerChoice} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Computer</b>: ${computerChoice}`;
     document.querySelector('.js-moves-image').innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;<img src = "Images/${playerChoice}-emoji.png" class = "image-rockpaperscissor">
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img src = "Images/${computerChoice}-emoji.png" class = "image-rockpaperscissor"> `;
 
@@ -179,10 +184,12 @@ if((playerChoice=='rock' && computerChoice=='rock')||(playerChoice=='paper' && c
         console.log('You Win')
         document.getElementById("output").innerHTML = "Congratulations! You Win!!!" 
         score.Wins=score.Wins+1;
+        triggerConfetti();
 
         } else  {console.log('You Loose')
-        document.getElementById("output").innerHTML = "You Loose. Please try again"
+        document.getElementById("output").innerHTML = "😢 You Loose. Please try again"
         score.Losses=score.Losses+1;
+        youLose();
                 };    
     };
     
@@ -217,5 +224,24 @@ function clearDisplay()
   document.getElementById("scoreResult").innerHTML = `Wins = ${score.Wins}, Losses = ${score.Losses}, Ties = ${score.Ties}`; 
   // Display in a <pre> tag for formatting  
 }
+
+function youLose() {
+      document.getElementById("loseSound").play();
+    
+    }
+
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        //Function to trigger confetti
+        function triggerConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+                  document.getElementById("winSound").play();
+        }
+        </script>
 </html>
