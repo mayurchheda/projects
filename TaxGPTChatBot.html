@@ -25,6 +25,11 @@
 
         h1 {
             font-size: 1.8rem;
+            text-align: center;
+        }
+        h2 {
+            text-align: center;
+            color: #007BFF;
         }
      .container {
             max-width: 600px;
@@ -34,17 +39,36 @@
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
-
+        .flex-row {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .flex-row img {
+            width: 70%;
+            height: auto;
+            border-radius: 8px;
+            max-width: 240px;
+            min-width: 100px;
+        }
+        .flex-row .desc {
+            flex: 1;
+        }
         </style>
     </head>
     
 <body>
     <div class="container">
         <h1>Tax GPT Chat Bot for KM Tax Services</h1>
-        <p>This is an intelligent chat bot that can answer complex questions about taxes.</p>
-        <p>It will be powered by World's top AI models.</p>
+            <div class="flex-row">
+                <img src="Images/Chatbot_img.png" alt="Tax GPT Chat Bot">
+                <div class= "desc">This is an intelligent chat bot powered by the world's top AI models, designed to answer complex tax-related questions.
+                    <p>The bot will be integrated into the KM Tax Services website, allowing clients to get quick answers to their tax queries.</p>
+                </div>
+            </div>
         <h2>COMING SOON.... FALL OF 2025</h2>
-        <p>To be on the early user list, please contact <a href="mailto:profchheda@gmail.com">Mayur Chheda</a>.</p>
+        <p style="text-align: center;">To be on the early user list, please contact <a href="mailto:profchheda@gmail.com">Mayur Chheda</a>.</p>
     </div>
 
 </body>
