@@ -117,6 +117,8 @@
 
 <p><div id="scoreResult"></div></p>
 
+<p id="winningStreakDisplay"></p>
+
 <p class = "js-reset"></p>
 
 </div>
@@ -150,8 +152,10 @@
     Losses: 0,
     Ties: 0
    };
-
+let winningStreak = 0; // variable to keep track of the winning streak
 /* creating a function to find the winner*/
+document.getElementById("winningStreakDisplay").innerText = `Your Winning Streak = ${winningStreak}`;
+
 function winner(playerChoice) 
 {
     const randomNumber = Math.random();
@@ -179,7 +183,9 @@ if((playerChoice=='rock' && computerChoice=='rock')||(playerChoice=='paper' && c
         document.getElementById("output").innerHTML = "It's a draw. Try again"
         score.Ties=score.Ties+1;
         document.getElementById("drawSound").play();
-
+        winningStreak = 0; // reset winning streak on a draw
+        // ...inside your winner() function, after updating winningStreak...
+        document.getElementById("winningStreakDisplay").innerText = `Your Winning Streak = ${winningStreak}`;
     } else {if 
         ((playerChoice=='rock'&&computerChoice=='scissors')||(playerChoice=='scissors'&&computerChoice=='paper')||(playerChoice=='paper'&&computerChoice=='rock')) 
         {
@@ -187,11 +193,15 @@ if((playerChoice=='rock' && computerChoice=='rock')||(playerChoice=='paper' && c
         document.getElementById("output").innerHTML = "😄🎉Congratulations! You Win!!!" 
         score.Wins=score.Wins+1;
         triggerConfetti();
+        winningStreak++; // increment winning streak
+        document.getElementById("winningStreakDisplay").innerText = `Your Winning Streak = ${winningStreak}`;
 
         } else  {console.log('You Loose')
         document.getElementById("output").innerHTML = "😢 You Loose. Please try again"
         score.Losses=score.Losses+1;
         youLose();
+        winningStreak = 0; // reset winning streak on a loss
+        document.getElementById("winningStreakDisplay").innerText = `Your Winning Streak = ${winningStreak}`;
                 };    
     };
     
@@ -225,6 +235,8 @@ function clearDisplay()
   localStorage.removeItem('score');  
   document.getElementById("scoreResult").innerHTML = `Wins = ${score.Wins}, Losses = ${score.Losses}, Ties = ${score.Ties}`; 
   // Display in a <pre> tag for formatting  
+    winningStreak = 0; // reset winning streak
+    document.getElementById("winningStreakDisplay").innerText = `Your Winning Streak = ${winningStreak}`;
 }
 
 function youLose() {
