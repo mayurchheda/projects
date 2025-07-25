@@ -117,7 +117,8 @@
 
 <p><div id="scoreResult"></div></p>
 
-<p id="winningStreakDisplay"></p>
+<p><div id="winningStreakDisplay"></div> 
+    <div id="highWinningStreakDisplay"></div></p>
 
 <p class = "js-reset"></p>
 
@@ -154,7 +155,10 @@
    };
 let winningStreak = 0; // variable to keep track of the winning streak
 /* creating a function to find the winner*/
-document.getElementById("winningStreakDisplay").innerText = `Your Winning Streak = ${winningStreak}`;
+document.getElementById("winningStreakDisplay").innerText = `Current Winning Streak = ${winningStreak}`;
+
+let highWinningStreak = localStorage.getItem('highWinningStreak') || 0; // retrieve high winning streak from local storage or initialize to 0
+document.getElementById("highWinningStreakDisplay").innerText = `High Winning Streak = ${highWinningStreak}`;
 
 function winner(playerChoice) 
 {
@@ -183,9 +187,15 @@ if((playerChoice=='rock' && computerChoice=='rock')||(playerChoice=='paper' && c
         document.getElementById("output").innerHTML = "It's a draw. Try again"
         score.Ties=score.Ties+1;
         document.getElementById("drawSound").play();
+        // Check if the current winning streak is greater than the high winning streak
+        if (winningStreak > highWinningStreak) {
+            highWinningStreak = winningStreak; // update high winning streak
+            localStorage.setItem('highWinningStreak', highWinningStreak); // save to local storage
+            document.getElementById("highWinningStreakDisplay").innerText = `High Winning Streak = ${highWinningStreak}`;
+        }
         winningStreak = 0; // reset winning streak on a draw
         // ...inside your winner() function, after updating winningStreak...
-        document.getElementById("winningStreakDisplay").innerText = `Your Winning Streak = ${winningStreak}`;
+        document.getElementById("winningStreakDisplay").innerText = `Current Winning Streak = ${winningStreak}`;
     } else {if 
         ((playerChoice=='rock'&&computerChoice=='scissors')||(playerChoice=='scissors'&&computerChoice=='paper')||(playerChoice=='paper'&&computerChoice=='rock')) 
         {
@@ -194,14 +204,22 @@ if((playerChoice=='rock' && computerChoice=='rock')||(playerChoice=='paper' && c
         score.Wins=score.Wins+1;
         triggerConfetti();
         winningStreak++; // increment winning streak
-        document.getElementById("winningStreakDisplay").innerText = `Your Winning Streak = ${winningStreak}`;
+        document.getElementById("winningStreakDisplay").innerText = `Current Winning Streak = ${winningStreak}`;
 
         } else  {console.log('You Loose')
         document.getElementById("output").innerHTML = "😢 You Loose. Please try again"
         score.Losses=score.Losses+1;
         youLose();
+         // Check if the current winning streak is greater than the high winning streak
+        if (winningStreak > highWinningStreak) {
+            highWinningStreak = winningStreak; // update high winning streak
+            localStorage.setItem('highWinningStreak', highWinningStreak); // save to local storage
+            document.getElementById("highWinningStreakDisplay").innerText = `High Winning Streak = ${highWinningStreak}`;
+        }
+        winningStreak = 0; // reset winning streak on a draw
+        // ...inside your winner() function, after updating winningStreak...
         winningStreak = 0; // reset winning streak on a loss
-        document.getElementById("winningStreakDisplay").innerText = `Your Winning Streak = ${winningStreak}`;
+        document.getElementById("winningStreakDisplay").innerText = `Current Winning Streak = ${winningStreak}`;
                 };    
     };
     
