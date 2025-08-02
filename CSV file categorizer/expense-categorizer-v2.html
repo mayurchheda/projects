@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Categorizer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        /* ...existing CSS, unchanged... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .upload-section {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border: 3px dashed #cbd5e1;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        .upload-section:hover {
+            border-color: #4f46e5;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        }
+        .upload-section.dragover {
+            border-color: #4f46e5;
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #4338ca;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        .btn-success {
+            background: #059669;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #047857;
+        }
+        select, input {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .transactions-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        tr:hover {
+            background: #f8fafc;
+        }
+        .amount-positive {
+            color: #059669;
+            font-weight: 600;
+        }
+        .amount-negative {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .category-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+        }
+        .category-select.needs-review {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .confidence-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+        }
+        .confidence-high { background: #059669; }
+        .confidence-medium { background: #f59e0b; }
+        .confidence-low { background: #dc2626; }
+        .hidden {
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            transition: width 0.3s ease;
+        }
+        .category-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .category-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #4f46e5;
+        }
+        .category-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        .category-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #dc2626;
+        }
+        .category-count {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .control-group {
+                justify-content: space-between;
+            }
+            table {
+                font-size: 0.8rem;
+            }
+            th, td {
+                padding: 0.5rem;
+            }
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: #059669;
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .notification.error {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Expense Categorizer</h1>
+            <p>Upload your bank CSV files and automatically categorize your transactions</p>
+        </div>
+        <div class="main-content">
+            <div class="upload-section" id="uploadSection">
+                <h3 style="margin-bottom: 1rem; color: #1e293b;">📁 Upload CSV File</h3>
+                <p style="margin-bottom: 2rem; color: #64748b;">Drag and drop your bank CSV file here, or click to browse</p>
+                <input type="file" id="fileInput" class="file-input" accept=".csv" multiple>
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Choose Files
+                </button>
+                <div style="margin-top: 1rem; font-size: 0.9rem; color: #64748b;">
+                    Supports most bank CSV formats including Chase, Bank of America, Wells Fargo, etc.
+                </div>
+            </div>
+            <div id="dataSection" class="hidden">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalTransactions">0</div>
+                        <div class="stat-label">Total Transactions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalAmount">$0</div>
+                        <div class="stat-label">Total Amount</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="categorizedCount">0</div>
+                        <div class="stat-label">Auto-Categorized</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="needsReview">0</div>
+                        <div class="stat-label">Needs Review</div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="categoryFilter">Filter by Category:</label>
+                        <select id="categoryFilter">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="expenseType">Show:</label>
+                        <select id="expenseType">
+                            <option value="">All Expenses</option>
+                            <option value="business">Business Expenses Only</option>
+                            <option value="personal">Personal Expenses Only</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="reviewFilter">Review Status:</label>
+                        <select id="reviewFilter">
+                            <option value="">All Transactions</option>
+                            <option value="needs-review">Needs Review Only</option>
+                            <option value="categorized">Categorized Only</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="categorizeAll()">Auto-Categorize All</button>
+                    <button class="btn btn-success" onclick="exportResults()">Export for Tax Prep</button>
+                    <button class="btn btn-secondary" onclick="exportBusinessOnly()">Export Business Only</button>
+                    <button class="btn btn-secondary" onclick="resetData()">Clear Data</button>
+                </div>
+                <div class="transactions-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Category</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsBody">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="category-summary" id="categorySummary"></div>
+            </div>
+        </div>
+    </div>
+    <div class="notification" id="notification"></div>
+    <script>
+        // Global variables
+        let transactions = [];
+        let categories = [
+            // IRS Business Expense Categories
+            'Advertising & Marketing',
+            'Business Meals (50% Deductible)',
+            'Business Entertainment (Non-deductible)',
+            'Car & Vehicle Expenses',
+            'Commissions & Fees',
+            'Contract Labor',
+            'Depreciation',
+            'Employee Benefits',
+            'Insurance (Business)',
+            'Interest (Business)',
+            'Legal & Professional Services',
+            'Office Expenses',
+            'Rent or Lease (Business)',
+            'Repairs & Maintenance',
+            'Supplies',
+            'Taxes & Licenses',
+            'Travel (Business)',
+            'Utilities (Business)',
+            'Wages & Salaries',
+            'Other Business Expenses',
+            // Personal Categories
+            'Personal Meals & Dining',
+            'Personal Shopping',
+            'Personal Transportation',
+            'Personal Bills & Utilities',
+            'Personal Entertainment',
+            'Healthcare & Medical',
+            'Personal Travel',
+            'Education',
+            'Personal Income',
+            'Personal Transfers',
+            'Banking Fees',
+            'Investments & Retirement',
+            'Home & Personal',
+            'Other Personal'
+        ];
+        // IRS Business Expense Categorization Rules
+        // (Removed duplicate declaration of categorizationRules to avoid redeclaration error)
+        // Add a global variable to store original bank categories
+        let originalBankCategoryField = null;
+        // IRS Business Expense Categorization Rules
+        const categorizationRules = {
+            'Advertising & Marketing': [
+                'advertising', 'marketing', 'promotion', 'facebook ads', 'google ads', 'adwords',
+                'billboard', 'flyer', 'brochure', 'business card', 'logo design', 'website design',
+                'seo', 'social media', 'instagram', 'linkedin', 'twitter ads', 'mailchimp',
+                'constant contact', 'hootsuite', 'canva pro'
+            ],
+            'Business Meals (50% Deductible)': [
+                'business lunch', 'client dinner', 'meeting', 'conference meal', 'business breakfast',
+                'client entertainment', 'business meeting', 'working lunch', 'networking event'
+            ],
+            'Car & Vehicle Expenses': [
+                'gas', 'fuel', 'parking', 'car wash', 'auto repair', 'mechanic', 'oil change',
+                'car maintenance', 'vehicle registration', 'car insurance', 'auto insurance',
+                'shell', 'exxon', 'chevron', 'bp', 'mobil', 'valero', 'speedway',
+                'jiffy lube', 'valvoline', 'midas', 'firestone', 'goodyear'
+            ],
+            'Legal & Professional Services': [
+                'attorney', 'lawyer', 'legal', 'accountant', 'cpa', 'bookkeeper', 'consultant',
+                'professional services', 'tax preparation', 'notary', 'paralegal',
+                'business advisor', 'law firm', 'accounting firm'
+            ],
+            'Office Expenses': [
+                'office supplies', 'staples', 'office depot', 'paper', 'pens', 'printer',
+                'ink', 'toner', 'filing cabinet', 'desk', 'chair', 'computer',
+                'laptop', 'monitor', 'keyboard', 'mouse', 'software license'
+            ],
+            'Rent or Lease (Business)': [
+                'office rent', 'warehouse rent', 'retail space', 'commercial rent',
+                'lease payment', 'storage unit', 'co-working', 'wework', 'regus'
+            ],
+            'Utilities (Business)': [
+                'electric', 'electricity', 'water', 'gas bill', 'internet', 'phone',
+                'cable', 'wireless', 'cell phone', 'landline', 'broadband',
+                'verizon', 'att', 'comcast', 'sprint', 't-mobile', 'xfinity'
+            ],
+            'Travel (Business)': [
+                'airline', 'flight', 'hotel', 'motel', 'airbnb', 'uber', 'lyft', 'taxi',
+                'rental car', 'train', 'bus', 'conference', 'business trip',
+                'marriott', 'hilton', 'hyatt', 'expedia', 'booking.com'
+            ],
+            'Supplies': [
+                'supplies', 'materials', 'inventory', 'raw materials', 'packaging',
+                'shipping supplies', 'boxes', 'bubble wrap', 'tape', 'labels'
+            ],
+            'Insurance (Business)': [
+                'business insurance', 'liability insurance', 'workers comp', 'professional liability',
+                'errors and omissions', 'commercial insurance', 'property insurance'
+            ],
+            'Repairs & Maintenance': [
+                'repair', 'maintenance', 'hvac', 'plumbing', 'electrical', 'cleaning service',
+                'janitorial', 'landscaping', 'pest control', 'security system'
+            ],
+            'Taxes & Licenses': [
+                'business license', 'permit', 'registration fee', 'tax payment', 'irs',
+                'state tax', 'local tax', 'sales tax', 'payroll tax'
+            ],
+            'Contract Labor': [
+                'contractor', 'freelancer', 'consultant', 'temporary help', '1099',
+                'independent contractor', 'subcontractor'
+            ],
+            'Employee Benefits': [
+                'health insurance', 'dental insurance', 'retirement plan', '401k',
+                'life insurance', 'disability insurance', 'employee benefits'
+            ],
+            'Wages & Salaries': [
+                'payroll', 'salary', 'wages', 'employee pay', 'staff payment'
+            ],
+            'Interest (Business)': [
+                'business loan', 'line of credit', 'equipment loan', 'mortgage interest',
+                'business credit card interest'
+            ],
+            'Commissions & Fees': [
+                'commission', 'sales commission', 'referral fee', 'finder fee',
+                'brokerage fee', 'transaction fee'
+            ],
+            // Personal Categories
+            'Personal Meals & Dining': [
+                'restaurant', 'food', 'cafe', 'coffee', 'pizza', 'burger', 'taco', 'sushi',
+                'mcdonalds', 'starbucks', 'subway', 'chipotle', 'panera', 'dunkin',
+                'grocery', 'safeway', 'kroger', 'whole foods', 'trader joe', 'costco',
+                'walmart', 'target', 'publix', 'albertsons', 'wegmans'
+            ],
+            'Personal Shopping': [
+                'amazon', 'ebay', 'walmart', 'target', 'costco', 'home depot',
+                'lowes', 'best buy', 'apple store', 'clothing', 'shoes',
+                'electronics', 'books', 'toys', 'personal items'
+            ],
+            'Personal Bills & Utilities': [
+                'mortgage', 'rent', 'home insurance', 'property tax', 'hoa',
+                'personal electric', 'personal water', 'personal gas',
+                'personal internet', 'personal phone', 'cable tv'
+            ],
+            'Personal Entertainment': [
+                'netflix', 'spotify', 'hulu', 'disney', 'movie', 'theater',
+                'concert', 'sports', 'gym', 'fitness', 'club', 'bar',
+                'music', 'gaming', 'xbox', 'playstation'
+            ],
+            'Healthcare & Medical': [
+                'doctor', 'hospital', 'pharmacy', 'medical', 'dental',
+                'cvs', 'walgreens', 'rite aid', 'clinic', 'health',
+                'prescription', 'copay'
+            ],
+            'Personal Income': [
+                'salary', 'payroll', 'deposit', 'refund', 'dividend',
+                'interest', 'bonus', 'commission', 'social security'
+            ],
+            'Personal Transfers': [
+                'transfer', 'withdrawal', 'deposit', 'atm', 'check',
+                'savings transfer', 'investment transfer'
+            ],
+            'Banking Fees': [
+                'bank fee', 'atm fee', 'overdraft', 'maintenance fee',
+                'wire fee', 'check fee', 'monthly fee'
+            ],
+            'Personal Transportation': [
+                'personal gas', 'personal parking', 'car payment', 'auto loan',
+                'personal car insurance', 'personal uber', 'personal lyft'
+            ]
+        };
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFileUpload();
+            populateCategoryFilter();
+        });
+        function setupFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadSection = document.getElementById('uploadSection');
+            fileInput.addEventListener('change', handleFileSelect);
+            // Drag and drop functionality
+            uploadSection.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadSection.classList.add('dragover');
+            });
+            uploadSection.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadSection.classList.remove('dragover');
+            });
+            uploadSection.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadSection.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                handleFiles(files);
+            });
+        }
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            handleFiles(files);
+        }
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            transactions = [];
+            let filesProcessed = 0;
+            const totalFiles = files.length;
+            for (let file of files) {
+                if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+                    Papa.parse(file, {
+                        header: true,
+                        skipEmptyLines: true,
+                        dynamicTyping: true,
+                        complete: function(results) {
+                            processCSVData(results.data, file.name);
+                            filesProcessed++;
+                            if (filesProcessed === totalFiles) {
+                                finishDataLoading();
+                            }
+                        },
+                        error: function(error) {
+                            showNotification('Error parsing CSV: ' + error.message, 'error');
+                        }
+                    });
+                } else {
+                    showNotification('Please select CSV files only', 'error');
+                }
+            }
+        }
+        // Update processCSVData to detect and store the original bank category field
+        function processCSVData(data, filename) {
+            // Detect if the file has a 'category' or 'Category' column
+            if (data.length > 0) {
+                const keys = Object.keys(data[0]);
+                originalBankCategoryField = keys.find(
+                    k => k.trim().toLowerCase() === 'category'
+                );
+            }
+            data.forEach((row, index) => {
+                const transaction = parseTransaction(row, filename);
+                if (transaction) {
+                    // Store original bank category if present
+                    if (originalBankCategoryField && row[originalBankCategoryField]) {
+                        transaction.originalBankCategory = row[originalBankCategoryField];
+                    } else {
+                        transaction.originalBankCategory = '';
+                    }
+                    transactions.push(transaction);
+                }
+            });
+        }
+        function parseTransaction(row, filename) {
+            // Normalize keys: lowercase and remove spaces
+            const normalizedRow = {};
+            Object.keys(row).forEach(key => {
+                normalizedRow[key.toLowerCase().replace(/\s+/g, '')] = row[key];
+            });
+            // Now use normalized keys
+            const possibleDateColumns = ['date', 'transactiondate', 'postdate', 'postingdate'];
+            const possibleDescColumns = ['description', 'memo', 'payee', 'merchant'];
+            const possibleAmountColumns = ['amount', 'debit', 'credit', 'transactionamount'];
+            let date = null, description = null, amount = null;
+            for (let col of possibleDateColumns) {
+                if (normalizedRow[col]) {
+                    date = normalizedRow[col];
+                    break;
+                }
+            }
+            for (let col of possibleDescColumns) {
+                if (normalizedRow[col]) {
+                    description = normalizedRow[col];
+                    break;
+                }
+            }
+            for (let col of possibleAmountColumns) {
+                if (normalizedRow[col] !== undefined) {
+                    amount = normalizedRow[col];
+                    break;
+                }
+            }
+            // Handle debit/credit columns separately
+            if (!amount && (normalizedRow['debit'] !== undefined || normalizedRow['credit'] !== undefined)) {
+                amount = (normalizedRow['debit'] || 0) - (normalizedRow['credit'] || 0);
+                if (normalizedRow['debit'] && !normalizedRow['credit']) amount = -Math.abs(normalizedRow['debit']);
+                if (normalizedRow['credit'] && !normalizedRow['debit']) amount = Math.abs(normalizedRow['credit']);
+            }
+            if (!date || !description || amount === null) {
+                return null; // Skip invalid rows
+            }
+            return {
+                date: new Date(date),
+                description: String(description).trim(),
+                amount: parseFloat(amount) || 0,
+                category: '',
+                confidence: 0,
+                source: filename
+                // originalBankCategory will be added in processCSVData
+            };
+        }
+        function finishDataLoading() {
+            if (transactions.length === 0) {
+                showNotification('No valid transactions found in the uploaded files', 'error');
+                return;
+            }
+            // Sort transactions by date (newest first)
+            transactions.sort((a, b) => b.date - a.date);
+            // Auto-categorize
+            categorizeAll();
+            // Show data section
+            document.getElementById('dataSection').classList.remove('hidden');
+            updateStats();
+            renderTransactions();
+            updateCategorySummary();
+            showNotification(`Successfully loaded ${transactions.length} transactions!`);
+        }
+        function categorizeTransaction(transaction) {
+            const desc = transaction.description.toLowerCase();
+            let bestMatch = '';
+            let bestScore = 0;
+            for (let [category, keywords] of Object.entries(categorizationRules)) {
+                for (let keyword of keywords) {
+                    if (desc.includes(keyword.toLowerCase())) {
+                        const score = keyword.length / desc.length;
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = category;
+                        }
+                    }
+                }
+            }
+            // Special handling for income (positive amounts)
+            if (transaction.amount > 0 && !bestMatch) {
+                bestMatch = 'Personal Income';
+                bestScore = 0.5;
+            }
+            // Default to Other Personal for personal transactions
+            if (!bestMatch) {
+                // Check if it might be business-related based on amount or description
+                const desc = transaction.description.toLowerCase();
+                const businessKeywords = ['llc', 'inc', 'corp', 'business', 'company', 'professional', 'service'];
+                const isBusinessRelated = businessKeywords.some(keyword => desc.includes(keyword));
+                bestMatch = isBusinessRelated ? 'Other Business Expenses' : 'Other Personal';
+                bestScore = 0.1;
+            }
+            // Set confidence based on score
+            let confidence = 0;
+            if (bestScore > 0.3) confidence = 3; // High
+            else if (bestScore > 0.1) confidence = 2; // Medium
+            else if (bestMatch) confidence = 1; // Low
+            transaction.category = bestMatch || 'Other Personal';
+            transaction.confidence = confidence;
+        }
+        function categorizeAll() {
+            transactions.forEach(categorizeTransaction);
+            updateStats();
+            renderTransactions();
+            updateCategorySummary();
+        }
+        function updateStats() {
+            const total = transactions.length;
+            const totalAmount = transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const categorized = transactions.filter(t => t.category && !t.category.includes('Other')).length;
+            const needsReview = transactions.filter(t => t.confidence < 2).length;
+            document.getElementById('totalTransactions').textContent = total;
+            document.getElementById('totalAmount').textContent = '$' + totalAmount.toFixed(2);
+            document.getElementById('categorizedCount').textContent = categorized;
+            document.getElementById('needsReview').textContent = needsReview;
+            const progress = total > 0 ? (categorized / total) * 100 : 0;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        function renderTransactions() {
+            const tbody = document.getElementById('transactionsBody');
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const reviewFilter = document.getElementById('reviewFilter').value;
+            const expenseType = document.getElementById('expenseType').value;
+            tbody.innerHTML = '';
+            let filteredTransactions = transactions;
+            if (categoryFilter) {
+                filteredTransactions = filteredTransactions.filter(t => t.category === categoryFilter);
+            }
+            if (reviewFilter === 'needs-review') {
+                filteredTransactions = filteredTransactions.filter(t => t.confidence < 2);
+            } else if (reviewFilter === 'categorized') {
+                filteredTransactions = filteredTransactions.filter(t => t.confidence >= 2);
+            }
+            if (expenseType === 'business') {
+                filteredTransactions = filteredTransactions.filter(t => 
+                    !t.category.includes('Personal') && t.category !== 'Other Personal'
+                );
+            } else if (expenseType === 'personal') {
+                filteredTransactions = filteredTransactions.filter(t => 
+                    t.category.includes('Personal') || t.category === 'Other Personal' || 
+                    ['Healthcare & Medical', 'Education', 'Investments & Retirement', 'Home & Personal', 'Banking Fees'].includes(t.category)
+                );
+            }
+            filteredTransactions.forEach((transaction, index) => {
+                const row = document.createElement('tr');
+                const confidenceClass = transaction.confidence >= 2 ? 'confidence-high' : 
+                                      transaction.confidence === 1 ? 'confidence-medium' : 'confidence-low';
+                const amountClass = transaction.amount >= 0 ? 'amount-positive' : 'amount-negative';
+                // Add business/personal indicator
+                const isBusinessExpense = !transaction.category.includes('Personal') && 
+                                        !['Healthcare & Medical', 'Education', 'Investments & Retirement', 'Home & Personal', 'Banking Fees', 'Other Personal'].includes(transaction.category);
+                const typeIndicator = isBusinessExpense ? '🏢' : '🏠';
+                row.innerHTML = `
+                    <td>${transaction.date.toLocaleDateString()}</td>
+                    <td>${typeIndicator} ${transaction.description}</td>
+                    <td class="${amountClass}">$${transaction.amount.toFixed(2)}</td>
+                    <td>
+                        <select class="category-select ${transaction.confidence < 2 ? 'needs-review' : ''}" 
+                                onchange="updateCategory(${transactions.indexOf(transaction)}, this.value)">
+                            ${categories.map(cat => 
+                                `<option value="${cat}" ${cat === transaction.category ? 'selected' : ''}>${cat}</option>`
+                            ).join('')}
+                        </select>
+                    </td>
+                    <td>
+                        <span class="confidence-indicator ${confidenceClass}"></span>
+                        ${transaction.confidence >= 2 ? 'High' : transaction.confidence === 1 ? 'Medium' : 'Low'}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        function updateCategory(transactionIndex, newCategory) {
+            transactions[transactionIndex].category = newCategory;
+            transactions[transactionIndex].confidence = 3; // User override = high confidence
+            updateStats();
+            updateCategorySummary();
+        }
+        function updateCategorySummary() {
+            const summary = {};
+            transactions.forEach(transaction => {
+                if (!summary[transaction.category]) {
+                    summary[transaction.category] = { amount: 0, count: 0 };
+                }
+                summary[transaction.category].amount += Math.abs(transaction.amount);
+                summary[transaction.category].count++;
+            });
+            const summaryDiv = document.getElementById('categorySummary');
+            summaryDiv.innerHTML = '';
+            Object.entries(summary)
+                .sort((a, b) => b[1].amount - a[1].amount)
+                .forEach(([category, data]) => {
+                    const card = document.createElement('div');
+                    card.className = 'category-card';
+                    card.innerHTML = `
+                        <div class="category-name">${category}</div>
+                        <div class="category-amount">$${data.amount.toFixed(2)}</div>
+                        <div class="category-count">${data.count} transactions</div>
+                    `;
+                    summaryDiv.appendChild(card);
+                });
+        }
+        function populateCategoryFilter() {
+            const select = document.getElementById('categoryFilter');
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                select.appendChild(option);
+            });
+        }
+        function exportBusinessOnly() {
+            const businessTransactions = transactions.filter(t => 
+                !t.category.includes('Personal') && 
+                !['Healthcare & Medical', 'Education', 'Investments & Retirement', 'Home & Personal', 'Banking Fees', 'Other Personal'].includes(t.category)
+            );
+            if (businessTransactions.length === 0) {
+                showNotification('No business transactions found', 'error');
+                return;
+            }
+            const csvData = businessTransactions.map(t => ({
+                Date: t.date.toLocaleDateString(),
+                Description: t.description,
+                Amount: Math.abs(t.amount).toFixed(2),
+                'IRS Category': t.category,
+                'Deductible': getDeductibleAmount(t),
+                'Tax Notes': getTaxNotes(t.category),
+                Source: t.source
+            }));
+            const csv = Papa.unparse(csvData);
+            downloadCSV(csv, 'business_expenses_tax_prep.csv');
+            showNotification(`Exported ${businessTransactions.length} business expenses for tax preparation!`);
+        }
+        function getDeductibleAmount(transaction) {
+            const amount = Math.abs(transaction.amount);
+            if (transaction.category === 'Business Meals (50% Deductible)') {
+                return (amount * 0.5).toFixed(2);
+            }
+            if (transaction.category === 'Business Entertainment (Non-deductible)') {
+                return '0.00';
+            }
+            return amount.toFixed(2);
+        }
+        function getTaxNotes(category) {
+            const notes = {
+                'Business Meals (50% Deductible)': 'Only 50% deductible - must be business-related',
+                'Business Entertainment (Non-deductible)': 'Generally not deductible after 2017 tax reform',
+                'Car & Vehicle Expenses': 'Choose either actual expenses or standard mileage rate',
+                'Travel (Business)': 'Must be ordinary and necessary for business',
+                'Office Expenses': 'Supplies used in current tax year',
+                'Legal & Professional Services': 'Must be business-related',
+                'Advertising & Marketing': 'Ordinary and necessary business promotion',
+                'Depreciation': 'See depreciation schedules and limits'
+            };
+            return notes[category] || 'Ordinary and necessary business expense';
+        }
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', filename);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+        function resetData() {
+            transactions = [];
+            document.getElementById('dataSection').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            showNotification('Data cleared successfully!');
+        }
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type === 'error' ? 'error' : ''}`;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        // Event listeners for filters
+        document.getElementById('categoryFilter').addEventListener('change', renderTransactions);
+        document.getElementById('reviewFilter').addEventListener('change', renderTransactions);
+        document.getElementById('expenseType').addEventListener('change', renderTransactions);
+        // Update exportResults to include the original bank category and original category if present
+        function exportResults() {
+            if (transactions.length === 0) {
+                showNotification('No data to export', 'error');
+                return;
+            }
+            const csvData = transactions.map(t => ({
+                Date: t.date.toLocaleDateString(),
+                Description: t.description,
+                Amount: t.amount.toFixed(2),
+                Category: t.category,
+                'Original Bank Category': t.originalBankCategory || '',
+                'Business/Personal': getBizPersonalType(t.category),
+                Confidence: t.confidence >= 2 ? 'High' : t.confidence === 1 ? 'Medium' : 'Low',
+                Source: t.source
+            }));
+            const csv = Papa.unparse(csvData);
+            downloadCSV(csv, 'categorized_transactions.csv');
+            showNotification('Data exported successfully!');
+        }
+        function getBizPersonalType(category) {
+            if (category.includes('Personal') || 
+                ['Healthcare & Medical', 'Education', 'Investments & Retirement', 'Home & Personal', 'Banking Fees', 'Other Personal'].includes(category)) {
+                return 'Personal';
+            }
+            return 'Business';
+        }
+    </script>
+</body>
+</html>
